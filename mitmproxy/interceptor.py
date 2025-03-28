@@ -1,107 +1,108 @@
+import os
 import json
+import logging
 import requests
 from mitmproxy import http
-import os
 
+# --- Configuration ---
 GUARDIAN_URL = os.getenv("GUARDIAN_URL", "https://guardian:5001/analyze")
 CERT_PATH = "/usr/local/share/ca-certificates/guardian.crt"
-TIME_OUT = int(os.getenv("TIME_OUT", 15))
+TIMEOUT = int(os.getenv("TIMEOUT", 15))
+API_HOST = "api.openai.com"
 
-print("MITM Running...")
+# --- Setup Logging ---
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+logger = logging.getLogger("proxy")
+logger.info("MITM Proxy started")
 
 class OpenAIInterceptor:
+
     def request(self, flow: http.HTTPFlow):
-        if "api.openai.com" in flow.request.pretty_host:
+        """
+        Check the user's prompt before it goes to OpenAI.
+        If it is risky, block it and send a warning instead.
+        """
+        if API_HOST in flow.request.pretty_host:
             try:
-                content = flow.request.get_text()
-                if not content:
-                    print("[Interceptor ERROR] Empty content")
+                body = flow.request.get_text()
+                if not body:
+                    logger.warning("No content in request")
                     return
 
-                print("Content:", content)
-                data = json.loads(content)
+                data = json.loads(body)
                 prompt = data["messages"][-1]["content"]
+                logger.info("Prompt: %s", prompt)
 
-                print("Request to guardian:", prompt)
-                result = self.analyze_prompt(prompt)
-                print("Result from analyze:", result)
+                result = self.check_with_guardian(prompt)
+                logger.info("Prompt check result: %s", result)
 
                 if result["blocked"]:
-                    reason = result["reason"]
-                    blocked_response = {
+                    # Replace OpenAI reply with custom warning
+                    warning = {
                         "choices": [{
                             "message": {
                                 "role": "assistant",
-                                "content": reason
+                                "content": result["reason"]
                             }
                         }]
                     }
-
                     flow.response = http.Response.make(
                         200,
-                        json.dumps(blocked_response),
+                        json.dumps(warning),
                         {"Content-Type": "application/json"}
                     )
-                    print(f"[REQUEST BLOCKED] {prompt} → {reason}")
-                    return 
+                    logger.warning("Blocked prompt: %s", prompt)
 
             except Exception as e:
-                print(f"[Interceptor ERROR] {e}")
+                logger.error("Error in request: %s", str(e))
 
     def response(self, flow: http.HTTPFlow):
-        if "api.openai.com" in flow.request.pretty_host:
+        """
+        Check OpenAI's response before it reaches the user.
+        If it is risky, replace it with a warning.
+        """
+        if API_HOST in flow.request.pretty_host:
             try:
-                content = flow.response.get_text()
-                if not content:
-                    print("[Interceptor ERROR] Empty response")
-                    return
+                body = flow.response.get_text()
+                data = json.loads(body)
+                reply = data["choices"][0]["message"]["content"]
+                logger.info("Response: %s", reply)
 
-                print("OpenAI Response:", content)
-                data = json.loads(content)
-                message = data["choices"][0]["message"]["content"]
-
-                print("Sending OpenAI response to Guardian:", message)
-                result = self.analyze_prompt(message)
-                print("Guardian result on response:", result)
+                result = self.check_with_guardian(reply)
+                logger.info("Response check result: %s", result)
 
                 if result["blocked"]:
-                    reason = result["reason"]
-                    flow.response = http.Response.make(
-                        200,
-                        json.dumps({
-                            "choices": [{
-                                "message": {
-                                    "role": "assistant",
-                                    "content": reason
-                                }
-                            }]
-                        }),
-                        {"Content-Type": "application/json"}
+                    data["choices"][0]["message"]["content"] = (
+                        "***Response was blocked by Guardian***\n" + result["reason"]
                     )
-                    print(f"[RESPONSE BLOCKED] → {reason}")
-                    return
+                    flow.response.set_text(json.dumps(data))
+                    logger.warning("Blocked response: %s", reply)
+
             except Exception as e:
-                print(f"[Response Interceptor ERROR] {e}")
+                logger.error("Error in response: %s", str(e))
 
-
-    def analyze_prompt(self, prompt):
+    def check_with_guardian(self, text):
+        """
+        Send text to Guardian and return result with block status and reason.
+        """
         try:
-            res = requests.post(
+            response = requests.post(
                 GUARDIAN_URL,
-                json={"prompt": prompt},
-                timeout=TIME_OUT,
+                json={"prompt": text},
+                timeout=TIMEOUT,
                 verify=CERT_PATH
             )
-            result = res.json()
-            if result.get("blocked"):
-                return {
-                    "blocked": True,
-                    "reason": result.get("reply", "The prompt is considered toxic.")
-                }
+            result = response.json()
+            return {
+                "blocked": result.get("blocked", False),
+                "reason": result.get("reply", "The content was considered harmful.")
+            }
         except Exception as e:
-            print(f"[Risk Service ERROR] {e}")
+            logger.error("Guardian check failed: %s", str(e))
+            return {"blocked": False, "reason": None}
 
-        return {"blocked": False, "reason": None}
-
-
+# --- Register ---
 addons = [OpenAIInterceptor()]
