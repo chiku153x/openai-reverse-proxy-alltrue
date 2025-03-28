@@ -32,40 +32,10 @@ alltrue/
 ├── nginx/              # NGINX config and SSL certs
 ├── vllm/               # Guardian app with LLM (this is a clone of https://github.com/vllm-project/vllm.git)
 ├── docker-compose.yml  # Service definitions
+├── run.sh              # Run all commands
 ```
 
 ---
-
-## Clone https://github.com/vllm-project/vllm.git
-
-Run the following commands to clone and adopt to this project
-
-```bash
-cd vllm
-chmod +x ./clone-vllm.sh
-sh ./clone-vllm.sh
-```
-
-## Generate Certificates
-### Step 1: Location
-
-Locate nginx/certs directory
-
-### Step 2: Generate Cert and Key
-```bash
-cd nginx/certs
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout server.key -out server.crt \
-  -config nginx_openssl.cnf
-```
-
-```bash
-cd nginx/certs
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-  -keyout guardian.key -out guardian.crt \
-  -config guardian_openssl.cnf
-```
-
 
 ## Required modifications in docker-compose.yml
 
@@ -90,15 +60,39 @@ Let other environment varibles in all services be as they are
 ---
 
 ## How to Run
-### Start all services
+### Start all services with generating vllm project and certs
+
 ```bash
-docker compose up --build -d
+chmod +x run.sh
+./run.sh -all
 ```
 
-### Stop and remove containers and volumes
-```bash
-docker compose down -v
+### Initialize only 
+#### This removes certs keys and vllm project
 ```
+./run.sh --init
+```
+
+### Start only 
+#### This will just start the services
+```
+./run.sh --start
+```
+
+### Shutdown only 
+#### This will just sshut down the services
+```
+./run.sh --stop
+```
+
+### Start in detached mode 
+#### Start services in detached mode
+```
+./run.sh --startd
+```
+
+
+
 
 ### Check container status
 ```bash
