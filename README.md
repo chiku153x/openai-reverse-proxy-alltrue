@@ -52,16 +52,22 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 ## Required modifications in docker-compose.yml
 
 Client
+```
 OPENAI_API_KEY - Use a valid open api key 
 OPENAI_MODEL - gpt-3.5-turbo or use a latest one
+```
 
 mitm
+```
 TIME_OUT - use a higher value such as 30 if the guardian is slow
+```
 
 guardian
+```
 TOXICITY_THRESHOLD = This decides to block or allow based on this threshold
+```
 
-Let other environment varibles be as they are
+Let other environment varibles in all services be as they are
 
 ---
 
