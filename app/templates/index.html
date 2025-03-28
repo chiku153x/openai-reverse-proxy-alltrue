@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat with OpenAI LLM Service</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="chat-container">
+    <h1>Chat with OpenAI LLM Service</h1>
+    <textarea id="prompt" placeholder="Type your prompt here..."></textarea>
+    <button onclick="sendPrompt()">Send</button>
+    <div id="response-box"></div>
+  </div>
+
+  <script>
+    async function sendPrompt() {
+      const prompt = document.getElementById('prompt').value;
+      const responseBox = document.getElementById('response-box');
+      responseBox.innerHTML = "⏳ Waiting for response...";
+
+      const res = await fetch('/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+
+      const data = await res.json();
+      if (data.response) {
+        responseBox.innerHTML = `<p><strong>Assistant:</strong> ${data.response}</p>`;
+      } else {
+        responseBox.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
