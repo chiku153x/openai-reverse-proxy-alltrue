@@ -1,0 +1,69 @@
+services:
+
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - OPENAI_API_KEY=sk-xx
+      - PROXY_URL=https://nginx/v1/chat/completions
+      - DEBUG=True
+      - OPENAI_MODEL=gpt-3.5-turbo
+    networks:
+      - backend 
+
+  mitm:
+    build: ./mitmproxy
+    container_name: mitm
+    depends_on:
+      - guardian
+    environment:
+      - GUARDIAN_URL=https://guardian:5001/analyze
+      - REQUESTS_CA_BUNDLE=/usr/local/share/ca-certificates/guardian.crt
+      - TIME_OUT=30
+    volumes:
+      - ./nginx/certs/guardian.crt:/usr/local/share/ca-certificates/guardian.crt  
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/certs:/etc/nginx/certs
+    ports:
+      - "443:443"
+    depends_on:
+      - mitm
+    networks:
+      - backend
+
+
+  guardian:
+    build:
+      context: ./vllm-main
+      dockerfile: Dockerfile.cpu
+    container_name: guardian
+    ports:
+      - "5001:5001"
+    environment:
+      - MODEL_PATHNAME=ibm-granite/granite-guardian-3.2-3b-a800m
+      - DEBUG=True
+      - MAX_MODEL_LEN=1024
+      - TENSOR_PARALLEL_SIZE=1
+      - TOXICITY_THRESHOLD=0.75
+    volumes:
+      - ./nginx/certs/guardian.crt:/certs/server.crt
+      - ./nginx/certs/guardian.key:/certs/server.key 
+    networks:
+      - backend
+   
+
+networks:
+  backend:
+
+

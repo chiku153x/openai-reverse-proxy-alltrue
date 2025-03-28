@@ -15,6 +15,14 @@ This system is designed to act as a secure reverse proxy between clients and Ope
 - HTTPS support end-to-end via NGINX termination.
 
 ---
+## Prerequisites
+- This set of applications were tested with the following configurations
+    - docker = (25.0.8) 
+    - docker compose (v2.24.6)
+    - CPU = 16vCPU 
+    - RAM = 128G
+    - SSD = 100G
+    - OS  = Linux ip-172-31-31-152.ec2.internal 6.1.130-139.222.amzn2023.x86_64
 
 ## Project Structure
 ```
@@ -51,7 +59,7 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 
 ## Required modifications in docker-compose.yml
 
-Client
+app
 ```
 OPENAI_API_KEY - Use a valid open api key 
 OPENAI_MODEL - gpt-3.5-turbo or use a latest one
