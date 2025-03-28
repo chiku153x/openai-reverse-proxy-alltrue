@@ -1,13 +1,13 @@
-# openai-reverse-proxy-alltrue
+# A Reverse proxy for OpenAI (ALLTRUE - Exercise)
 
 
-# SSL Certificate Setup for AllTrue Project
+## SSL Certificate Setup for AllTrue Project
 
 How to generate self-signed SSL certificates to securely enable HTTPS communication across services 
 
 ---
 
-## Directory Structure
+### Directory Structure
 
 Certificates should live in: `./nginx/certs/`
 
@@ -19,13 +19,13 @@ nginx/certs/
 
 ---
 
-## Step 1: Create OpenSSL Configuration Files
+### Step 1: Create OpenSSL Configuration Files
 
 Locate nginx/certs directory
 
-## Step 2: Generate Certificates
+### Step 2: Generate Certificates
 
-### Run the following commands inside the `nginx/certs` directory:
+#### Run the following commands inside the `nginx/certs` directory:
 
 ```bash
 # Generate Guardian cert & key
