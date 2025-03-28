@@ -21,7 +21,7 @@ validate_openai_key() {
 
     if [ "$key_length" -le 30 ]; then
         error "OPENAI_API_KEY is missing or too short in docker-compose.yml"
-        echo "→ Ensure it's in the format: OPENAI_API_KEY=your_api_key (length > 30)"
+        echo "Ensure it's in the format: OPENAI_API_KEY=your_api_key"
         exit 1
     fi
 
@@ -88,15 +88,19 @@ case "$1" in
     --all)
         validate_openai_key
         install
-        log "Starting docker compose..."
+        log "Starting all services..."
         docker compose up --build
         ;;
     --start)
-        log "Starting docker compose..."
+        log "Starting all services..."
         docker compose up --build
         ;;
+    --startd)
+        log "Starting all services detached mode..."
+        docker compose up --build -d
+        ;;
     --stop)
-        log "Stopping docker compose..."
+        log "Stopping services..."
         docker compose down -v
         ;;
     --init)
