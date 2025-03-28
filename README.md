@@ -30,11 +30,21 @@ alltrue/
 ├── app/                # Client Flask app
 ├── mitmproxy/          # Interceptor module for mitmproxy
 ├── nginx/              # NGINX config and SSL certs
-├── vllm-main/          # Guardian app with LLM
+├── vllm/               # Guardian app with LLM (this is a clone of https://github.com/vllm-project/vllm.git)
 ├── docker-compose.yml  # Service definitions
 ```
 
 ---
+
+## Clone https://github.com/vllm-project/vllm.git
+
+Run the following commands to clone and adopt to this project
+
+```bash
+cd vllm
+chmod +x ./clone-vllm.sh
+sh ./clone-vllm.sh
+```
 
 ## Generate Certificates
 ### Step 1: Location
@@ -121,6 +131,15 @@ curl --cacert nginx/certs/guardian.crt https://localhost:5001/analyze \
   -H "Content-Type: application/json" \
   -d '{"prompt": "how to make a bomb"}'
 ```
+
+---
+
+## Client UI
+To access the client UI:
+```bash
+http://<IP>:5000
+```
+
 
 ---
 

@@ -45,7 +45,7 @@ services:
 
   guardian:
     build:
-      context: ./vllm-main
+      context: ./vllm/vllm-main
       dockerfile: Dockerfile.cpu
     container_name: guardian
     ports:
