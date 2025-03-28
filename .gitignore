@@ -102,3 +102,8 @@ Desktop.ini
 
 vllm-main/
 vllm/vllm-main
+
+*.crt
+*.key
+nginx/certs/*.crt
+nginx/certs/*.key
