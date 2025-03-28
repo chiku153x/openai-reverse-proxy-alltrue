@@ -45,5 +45,17 @@ openssl req -x509 -nodes -days 365 \
 
 > Make sure to run these commands in the same directory as the config files.
 
+```
+nginx/certs/
+├── guardian.crt
+├── guardian.key
+├── server.crt
+├── server.key
+├── guardian_openssl.cnf
+├── nginx_openssl.cnf
+```
+
+> Finally you will get certs as above
+
 ---
 
